@@ -1,15 +1,18 @@
 package org.kuznetsov.balatropet;
 
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import javafx.geometry.Pos;
+import javafx.util.Duration;
 import org.jetbrains.annotations.NotNull;
 import org.kuznetsov.balatropet.constants.Constants;
 import org.kuznetsov.balatropet.models.*;
@@ -29,6 +32,11 @@ public class GameApp extends Application {
     private final Label deckCountLabel = new Label(Constants.Messages.REMAIN_IH_THE_DECK + "-");
     private final Label scoreLabel = new Label(Constants.Messages.SCORE + "-");
 
+    ImageView deckImage;
+
+    HBox handBox;
+    Pane overlayPane;
+
 
     @Override
     public void start(Stage primaryStage) {
@@ -36,36 +44,75 @@ public class GameApp extends Application {
         GameState.initializeLevels(1);
         deck = createDeck();
 
+        // UI-сцена (VBox — основной вертикальный макет)
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
         root.setPrefSize(800, 600);
 
-        // Контейнер для руки игрока
+        Image bgImage = new Image(Objects.requireNonNull(getClass().getResource(Constants.Paths.PATH_TO_GREEN_BACKGROUND)).toExternalForm());
+
+        BackgroundSize bgSize = new BackgroundSize(100, 100, true, true, true, false);
+        BackgroundImage backgroundImage = new BackgroundImage(
+                bgImage,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER,
+                bgSize
+        );
+
+        root.setBackground(new Background(backgroundImage));
+
+        // * 1. Рука игрока
         HBox handBox = new HBox(10);
         handBox.setAlignment(Pos.CENTER);
 
-        // Label с количеством оставшихся карт
-        deckCountLabel.setFont(new Font(16));
-        updateDeckCount(); // сразу обновим
+        // * 2. Очки и комбинация
+        resultLabel.setFont(new Font(Constants.Sizes.FONT_SIZE));
+        resultLabel.setTextFill(Constants.Colors.FONT_COLOR);
+        scoreLabel.setFont(new Font(Constants.Sizes.FONT_SIZE));
+        scoreLabel.setTextFill(Constants.Colors.FONT_COLOR);
+        VBox infoBox = new VBox(5, scoreLabel, resultLabel);
+        infoBox.setAlignment(Pos.CENTER);
 
-        // Кнопки управления
+        // * 3. Колода и счётчик
+        deckCountLabel.setFont(new Font(Constants.Sizes.FONT_SIZE));
+        updateDeckCount();
+        deckImage = new ImageView(new Image(Objects.requireNonNull(getClass()
+                .getResourceAsStream(Constants.Paths.PATH_TO_BLACK_BACK))));
+        deckImage.setFitWidth(Constants.Sizes.CARD_WIDTH);
+        deckImage.setFitHeight(Constants.Sizes.CARD_HEIGHT);
+        VBox deckBox = new VBox(5, deckCountLabel, deckImage);
+        deckBox.setAlignment(Pos.CENTER);
+
+        // * 4. Кнопки управления
         HBox buttonBox = getHBox(primaryStage);
 
-        // Инфо о комбинации
-        resultLabel.setFont(new Font(18));
-        scoreLabel.setFont(new Font(18));
+        // Сборка интерфейса
+        root.getChildren().addAll(
+                handBox,      // 1
+                infoBox,      // 2
+                deckBox,      // 3
+                buttonBox     // 4
+        );
 
-        // Сборка UI
-        root.getChildren().addAll(handBox, deckCountLabel, buttonBox, resultLabel, scoreLabel);
+        // Поверх — слой для анимаций
+        Pane overlay = new Pane();
+        overlay.setPickOnBounds(false);
 
-        Scene scene = new Scene(root);
+        StackPane stackRoot = new StackPane(root, overlay);
+
+        Scene scene = new Scene(stackRoot);
         primaryStage.setTitle(Constants.APP_NAME);
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        // Нарисовать стартовую руку
+        this.handBox = handBox;
+        this.overlayPane = overlay;
+
         drawPlayerHand(handBox);
     }
+
+
 
     @NotNull
     private HBox getHBox(Stage primaryStage) {
@@ -116,42 +163,50 @@ public class GameApp extends Application {
             deck = createDeck();
         }
 
-        // Заменяем выбранные карты новыми
+        List<Card> toReplace = new ArrayList<>(selectedCards);
+        selectedCards.clear();
+
         for (int i = 0; i < playerHand.size(); i++) {
-            Card card = playerHand.get(i);
-            if (selectedCards.contains(card)) {
-                Card newCard = deck.getDeck().removeFirst();
-                playerHand.set(i, newCard);
+            Card oldCard = playerHand.get(i);
+            if (toReplace.contains(oldCard)) {
+                final int index = i;
+                StackPane oldView = cardToLabel.get(oldCard);
+
+                Animations.animateCardToDeck(oldView, () -> {
+                    Card newCard = deck.getDeck().removeFirst();
+                    playerHand.set(index, newCard);
+                    StackPane newView = createCardView(newCard);
+                    cardToLabel.remove(oldCard);
+                    cardToLabel.put(newCard, newView);
+
+                    Duration delay = Duration.millis(index * 150);
+                    Animations.animateCardDrawToHand(
+                            overlayPane,
+                            handBox,
+                            index,
+                            newView,
+                            deckImage,
+                            Constants.Paths.PATH_TO_BLACK_BACK,
+                            delay
+                    );
+                });
             }
         }
 
-        selectedCards.clear();
         updateDeckCount();
-        updateFullHandUI();
         resultLabel.setText("");
     }
 
-    private void updateFullHandUI() {
-        HBox handBox = (HBox) cardToLabel.values().iterator().next().getParent();
-        handBox.getChildren().clear();
-        cardToLabel.clear();
-
-        for (Card card : playerHand) {
-            StackPane view = createCardView(card);
-            cardToLabel.put(card, view);
-            handBox.getChildren().add(view);
-        }
-    }
 
     private StackPane createCardView(Card card) {
         String suit = card.getSuit().name(); // HEART, SPADE
         int nominal = card.getNominal();     // from 2 to 14
-        String path = "/cards/%s/%d.png".formatted(suit, nominal);
 
-        Image image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(path)));
+        Image image = new Image(Objects.requireNonNull(getClass()
+                .getResourceAsStream(Constants.Paths.PATH_TO_CARD.formatted(suit, nominal))));
         ImageView imageView = new ImageView(image);
-        imageView.setFitWidth(60);
-        imageView.setFitHeight(90);
+        imageView.setFitWidth(Constants.Sizes.CARD_WIDTH);
+        imageView.setFitHeight(Constants.Sizes.CARD_HEIGHT);
 
         return getStackPane(card, imageView);
     }
@@ -203,6 +258,7 @@ public class GameApp extends Application {
 
     private void updateDeckCount() {
         deckCountLabel.setText(Constants.Messages.REMAIN_IH_THE_DECK + deck.getDeck().size());
+        deckCountLabel.setTextFill(Constants.Colors.FONT_COLOR);
     }
 
     public static void main(String[] args) {

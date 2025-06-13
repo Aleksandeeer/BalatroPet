@@ -3,10 +3,30 @@ package org.kuznetsov.balatropet.constants;
 import lombok.Getter;
 import lombok.Setter;
 
+import javafx.scene.paint.Color;
+
 @Getter
 @Setter
 public class Constants {
     public static String APP_NAME = "Balatro Pet Clone";
+
+    public static class Colors {
+        public static Color FONT_COLOR = Color.WHITE;
+    }
+
+    public static class Sizes {
+        public static int CARD_WIDTH = 60;
+        public static int CARD_HEIGHT = 90;
+        public static int FONT_SIZE = 18;
+    }
+
+    public static class Paths {
+        public static String PATH_TO_ROOT = "/cards";
+        public static String PATH_TO_BLACK_BACK = PATH_TO_ROOT + "/back/backB.png";
+        public static String PATH_TO_RED_BACK = PATH_TO_ROOT + "/back/backR.png";
+        public static String PATH_TO_CARD = PATH_TO_ROOT + "/%s/%d.png";
+        public static String PATH_TO_GREEN_BACKGROUND = PATH_TO_ROOT + "/Background/Green_back.jpg";
+    }
 
     public static class Init_parameters {
         public static int HAND_SIZE = 9;

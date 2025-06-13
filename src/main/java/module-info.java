@@ -12,6 +12,7 @@ module org.kuznetsov.balatropet {
     requires com.almasb.fxgl.all;
     requires static lombok;
     requires annotations;
+    requires java.desktop;
 
     opens org.kuznetsov.balatropet to javafx.fxml;
     exports org.kuznetsov.balatropet;
