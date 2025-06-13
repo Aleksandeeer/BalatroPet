@@ -1,0 +1,2 @@
+COORDINATES: 07, 28 -> 24, 05
+https://kully.github.io/pixel-paint/
