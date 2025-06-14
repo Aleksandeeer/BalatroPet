@@ -32,7 +32,8 @@ public class Constants {
         public static String PATH_TO_BLACK_BACK = PATH_TO_ROOT + "/back/backB.png";
         public static String PATH_TO_RED_BACK = PATH_TO_ROOT + "/back/backR.png";
         public static String PATH_TO_CARD = PATH_TO_ROOT + "/%s/%d.png";
-        public static String PATH_TO_GREEN_BACKGROUND = PATH_TO_ROOT + "/background/Green_back.jpg";
+        public static String PATH_TO_GREEN_BACKGROUND = "/background/Green_back.jpg";
+        public static String PATH_TO_LOGO = "/logo/LOGO.png";
     }
 
     public static class Init_parameters {

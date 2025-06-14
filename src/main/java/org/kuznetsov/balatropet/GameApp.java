@@ -17,6 +17,7 @@ import org.kuznetsov.balatropet.models.Card;
 import org.kuznetsov.balatropet.models.Deck;
 import org.kuznetsov.balatropet.models.PokerHandEvaluator;
 import org.kuznetsov.balatropet.models.Suit;
+import javafx.stage.Stage;
 
 import java.util.*;
 
@@ -42,6 +43,9 @@ public class GameApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         initGame();
+        primaryStage.getIcons().add(new Image(
+                Objects.requireNonNull(getClass().getResourceAsStream(Constants.Paths.PATH_TO_LOGO))
+        ));
 
         // UI-сцена (VBox — основной вертикальный макет)
         VBox root = new VBox(20);
@@ -85,7 +89,7 @@ public class GameApp extends Application {
         deckBox.setAlignment(Pos.CENTER);
 
         // * 4. Кнопки управления
-        HBox buttonBox = getHBox(primaryStage);
+        HBox buttonBox = getHBox();
 
         // Сборка интерфейса
         root.getChildren().addAll(
@@ -125,7 +129,7 @@ public class GameApp extends Application {
     }
 
     @NotNull
-    private HBox getHBox(Stage primaryStage) {
+    private HBox getHBox() {
         Button playButton = new Button(Constants.Messages.PLAY);
         playButton.setOnAction(e -> evaluatePlayedCards());
 
@@ -133,11 +137,15 @@ public class GameApp extends Application {
         discardButton.setOnAction(e -> discardAndRefill());
 
         Button restartButton = new Button(Constants.Messages.RESTART);
-        restartButton.setOnAction(e -> start(primaryStage));
+        restartButton.setOnAction(e -> restart());
 
         HBox buttonBox = new HBox(15, playButton, discardButton, restartButton);
         buttonBox.setAlignment(Pos.CENTER);
         return buttonBox;
+    }
+
+    private void restart() {
+        initGame();
     }
 
     private void drawPlayerHand(HBox handBox) {
