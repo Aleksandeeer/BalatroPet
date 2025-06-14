@@ -1,6 +1,5 @@
 package org.kuznetsov.balatropet;
 
-import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -9,13 +8,15 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.jetbrains.annotations.NotNull;
 import org.kuznetsov.balatropet.constants.Constants;
-import org.kuznetsov.balatropet.models.*;
+import org.kuznetsov.balatropet.models.Card;
+import org.kuznetsov.balatropet.models.Deck;
+import org.kuznetsov.balatropet.models.PokerHandEvaluator;
+import org.kuznetsov.balatropet.models.Suit;
 
 import java.util.*;
 
@@ -28,26 +29,24 @@ public class GameApp extends Application {
     private Deck deck;
 
     // LABELS
-    private final Label resultLabel = new Label(Constants.Messages.COMBINATION + "-");
+    private final Label resultLabel = new Label(Constants.Messages.DEFAULT_COMBINATION);
     private final Label deckCountLabel = new Label(Constants.Messages.REMAIN_IH_THE_DECK + "-");
-    private final Label scoreLabel = new Label(Constants.Messages.SCORE + "-");
+    private final Label scoreLabel = new Label(Constants.Messages.DEFAULT_SCORE);
 
     ImageView deckImage;
-
     HBox handBox;
     Pane overlayPane;
 
+    Random rand = new Random();
 
     @Override
     public void start(Stage primaryStage) {
-        GameState.HAND_SIZE = Constants.Init_parameters.HAND_SIZE;
-        GameState.initializeLevels(1);
-        deck = createDeck();
+        initGame();
 
         // UI-сцена (VBox — основной вертикальный макет)
         VBox root = new VBox(20);
         root.setAlignment(Pos.CENTER);
-        root.setPrefSize(800, 600);
+        root.setPrefSize(Constants.Sizes.GAME_WIDTH, Constants.Sizes.GAME_HEIGHT);
 
         Image bgImage = new Image(Objects.requireNonNull(getClass().getResource(Constants.Paths.PATH_TO_GREEN_BACKGROUND)).toExternalForm());
 
@@ -78,7 +77,8 @@ public class GameApp extends Application {
         deckCountLabel.setFont(new Font(Constants.Sizes.FONT_SIZE));
         updateDeckCount();
         deckImage = new ImageView(new Image(Objects.requireNonNull(getClass()
-                .getResourceAsStream(Constants.Paths.PATH_TO_BLACK_BACK))));
+                .getResourceAsStream(rand.nextInt(0, 1) == 1 ?
+                        Constants.Paths.PATH_TO_BLACK_BACK : Constants.Paths.PATH_TO_RED_BACK))));
         deckImage.setFitWidth(Constants.Sizes.CARD_WIDTH);
         deckImage.setFitHeight(Constants.Sizes.CARD_HEIGHT);
         VBox deckBox = new VBox(5, deckCountLabel, deckImage);
@@ -112,7 +112,17 @@ public class GameApp extends Application {
         drawPlayerHand(handBox);
     }
 
+    private void initGame() {
+        PokerHandEvaluator.setScore(0);
+        PokerHandEvaluator.setPlayedHand(null);
+        scoreLabel.setText(Constants.Messages.DEFAULT_SCORE);
+        resultLabel.setText(Constants.Messages.DEFAULT_COMBINATION);
 
+        GameState.HAND_SIZE = Constants.Init_parameters.HAND_SIZE;
+        GameState.initializeGameState(1);
+
+        deck = createDeck();
+    }
 
     @NotNull
     private HBox getHBox(Stage primaryStage) {
@@ -186,7 +196,8 @@ public class GameApp extends Application {
                             index,
                             newView,
                             deckImage,
-                            Constants.Paths.PATH_TO_BLACK_BACK,
+                            rand.nextInt(0,1) == 1 ? Constants.Paths.PATH_TO_BLACK_BACK :
+                                    Constants.Paths.PATH_TO_RED_BACK,
                             delay
                     );
                 });
@@ -196,7 +207,6 @@ public class GameApp extends Application {
         updateDeckCount();
         resultLabel.setText("");
     }
-
 
     private StackPane createCardView(Card card) {
         String suit = card.getSuit().name(); // HEART, SPADE
@@ -214,11 +224,11 @@ public class GameApp extends Application {
     @NotNull
     private StackPane getStackPane(Card card, ImageView imageView) {
         StackPane container = new StackPane(imageView);
-        container.setStyle("-fx-border-color: black; -fx-border-width: 2;");
+        container.setStyle(Constants.Styles.BLACK_BORDER + "-fx-border-width: 2;");
         container.setOnMouseClicked(e -> {
             if (selectedCards.contains(card)) {
                 selectedCards.remove(card);
-                container.setStyle("-fx-border-color: black; -fx-border-width: 2;");
+                container.setStyle(Constants.Styles.BLACK_BORDER + "-fx-border-width: 2;");
             } else {
                 if (selectedCards.size() < 5) {
                     selectedCards.add(card);

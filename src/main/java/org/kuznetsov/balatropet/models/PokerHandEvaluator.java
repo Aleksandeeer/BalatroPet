@@ -1,16 +1,19 @@
 package org.kuznetsov.balatropet.models;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.kuznetsov.balatropet.GameState;
 
 import java.util.*;
 
 public class PokerHandEvaluator {
     @Getter
+    @Setter
     private static Played_hand playedHand;
     @Getter
     private static List<Card> scoringCards; // ? playedHand contains scoringCards, but not the other way around
     @Getter
+    @Setter
     private static int score;
 
     public static void evaluateHand(List<Card> playedHandCards) {

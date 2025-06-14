@@ -19,7 +19,7 @@ public class GameState {
     public static int STRAIGHT_FLUSH_LVL;
     public static int FLUSH_ROYAL_LVL;
 
-    public static void initializeLevels(int n) {
+    public static void initializeGameState(int n) {
         HIGH_CARD_LVL = n;
         PAIR_LVL = n;
         TWO_PAIR_LVL = n;
@@ -30,5 +30,8 @@ public class GameState {
         FOUR_OF_A_KIND_LVL = n;
         STRAIGHT_FLUSH_LVL = n;
         FLUSH_ROYAL_LVL = n;
+
+        ANTE = 1;
+        MONEY = 10;
     }
 }
