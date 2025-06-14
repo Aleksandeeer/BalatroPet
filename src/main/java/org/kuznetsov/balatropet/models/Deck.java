@@ -20,7 +20,14 @@ public class Deck {
         deck = new ArrayList<>();
         for (int i = 0; i < 4; i++) { // suit
             for (int j = 1; j < 13; j++) { // nominal
-                deck.add(new Card((i + 1) * j, Suit.values()[i], j, true, symbols[j], suit[i]));
+                deck.add(new Card(
+                        (i + 1) * (j + 2),
+                        Suit.values()[i],
+                        j + 2,
+                        true,
+                        Deck.getSymbols()[j],
+                        Deck.getSuit()[i]
+                ));
             }
         }
     }

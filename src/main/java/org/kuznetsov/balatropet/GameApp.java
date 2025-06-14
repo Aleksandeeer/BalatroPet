@@ -43,6 +43,7 @@ public class GameApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         initGame();
+
         primaryStage.getIcons().add(new Image(
                 Objects.requireNonNull(getClass().getResourceAsStream(Constants.Paths.PATH_TO_LOGO))
         ));
@@ -89,7 +90,7 @@ public class GameApp extends Application {
         deckBox.setAlignment(Pos.CENTER);
 
         // * 4. Кнопки управления
-        HBox buttonBox = getHBox();
+        HBox buttonBox = getHBox(primaryStage);
 
         // Сборка интерфейса
         root.getChildren().addAll(
@@ -125,11 +126,11 @@ public class GameApp extends Application {
         GameState.HAND_SIZE = Constants.Init_parameters.HAND_SIZE;
         GameState.initializeGameState(1);
 
-        deck = createDeck();
+        deck = new Deck();
     }
 
     @NotNull
-    private HBox getHBox() {
+    private HBox getHBox(Stage primaryStage) {
         Button playButton = new Button(Constants.Messages.PLAY);
         playButton.setOnAction(e -> evaluatePlayedCards());
 
@@ -137,13 +138,14 @@ public class GameApp extends Application {
         discardButton.setOnAction(e -> discardAndRefill());
 
         Button restartButton = new Button(Constants.Messages.RESTART);
-        restartButton.setOnAction(e -> restart());
+        restartButton.setOnAction(e -> start(primaryStage));
 
         HBox buttonBox = new HBox(15, playButton, discardButton, restartButton);
         buttonBox.setAlignment(Pos.CENTER);
         return buttonBox;
     }
 
+    // TODO: дописать и заменить в restartButton.setOnAction()
     private void restart() {
         initGame();
     }
@@ -155,7 +157,7 @@ public class GameApp extends Application {
         cardToLabel.clear();
 
         if (deck.getDeck().size() < GameState.HAND_SIZE) {
-            deck = createDeck();
+            deck = new Deck();
         }
 
         Collections.shuffle(deck.getDeck());
@@ -178,7 +180,7 @@ public class GameApp extends Application {
         }
 
         if (deck.getDeck().size() < selectedCards.size()) {
-            deck = createDeck();
+            deck = new Deck();
         }
 
         List<Card> toReplace = new ArrayList<>(selectedCards);
@@ -255,23 +257,6 @@ public class GameApp extends Application {
             scoreLabel.setText(Constants.Messages.SCORE + PokerHandEvaluator.getScore());
             resultLabel.setText(Constants.Messages.COMBINATION + PokerHandEvaluator.getPlayedHand().getRussianName());
         }
-    }
-
-    private Deck createDeck() {
-        List<Card> cards = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 13; j++) {
-                cards.add(new Card(
-                        (i + 1) * (j + 2),
-                        Suit.values()[i],
-                        j + 2,
-                        true,
-                        Deck.getSymbols()[j],
-                        Deck.getSuit()[i]
-                ));
-            }
-        }
-        return new Deck(cards);
     }
 
     private void updateDeckCount() {
